@@ -221,9 +221,9 @@ void CSVhandler::set_sector_names()
 	_sector_names = temp;
 }
 
-std::vector<std::pair<std::string, double>> CSVhandler::one_sector_top_contributors(int index)
+std::vector<std::pair<std::string, double> > CSVhandler::one_sector_top_contributors(int index)
 {
-	std::vector<std::pair<std::string, double>> to_sort;
+	std::vector<std::pair<std::string, double> > to_sort;
 	for (int i = 1; i < _num_sectors*_num_regions+1; i++)
 	{
 		to_sort.push_back(buildpair(i, index));
@@ -232,18 +232,17 @@ std::vector<std::pair<std::string, double>> CSVhandler::one_sector_top_contribut
 	sort._num_top_contributors = _num_top_contributors;
 	sort.num_regions = _num_regions;
 	std::sort(to_sort.begin(), to_sort.end(), sort);
-	std::vector<std::pair<std::string, double>> top_n;
+	std::vector<std::pair<std::string, double> > top_n;
 	for (int i = 0; i < _num_top_contributors; i++)
 	{
 		top_n.push_back(to_sort[i]);
 	}
-
 	return top_n;
 }
 
 void CSVhandler::set_all_top_contributors()
 {
-	std::vector<std::vector<std::pair<std::string, double>>> temp;
+	std::vector<std::vector<std::pair<std::string, double> > > temp;
 	for (int i = 1; i < _num_sectors*_num_regions+1; i++)
 	{
 		temp.push_back(one_sector_top_contributors(i));

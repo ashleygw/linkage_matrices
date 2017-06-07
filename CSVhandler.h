@@ -10,7 +10,7 @@
 
 class CSVhandler {
 public:
-	std::vector<std::vector<std::string>> db;
+	std::vector<std::vector<std::string> > db;
 	void readCSV(std::istream &input);
 	void writeCSV_FLT();
 	void writeFLT(std::istream &input);
@@ -42,7 +42,7 @@ class sorter {
 public:
 	bool operator()(std::vector<double>& a, std::vector<double>& b);
 	bool operator()(std::pair<std::string, double>& a, std::pair<std::string, double>& b);
-	bool sorter::operator()(std::pair<std::string, std::vector<double> >& a, std::pair<std::string, std::vector<double> >& b);
+	bool operator()(std::pair<std::string, std::vector<double> >& a, std::pair<std::string, std::vector<double> >& b);
 	int num_regions;
 	int _num_top_contributors;
 };
