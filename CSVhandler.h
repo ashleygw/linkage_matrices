@@ -34,13 +34,9 @@ public:
 	std::vector<double> _sumvec;
 	std::vector<std::pair<std::string, double> > _sumpair;
 	std::vector<std::vector<double> > _regions;
-
 	std::vector<std::pair<std::string,std::vector<double> > > _sectors;
-
 	std::vector<std::string> _sector_names;
 	std::vector<std::vector<std::pair<std::string, double> > > _all_top_contributors;
-
-	
 };
 class sorter {
 public:

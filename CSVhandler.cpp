@@ -241,8 +241,6 @@ std::vector<std::pair<std::string, double>> CSVhandler::one_sector_top_contribut
 	return top_n;
 }
 
-
-
 void CSVhandler::set_all_top_contributors()
 {
 	std::vector<std::vector<std::pair<std::string, double>>> temp;
@@ -273,6 +271,8 @@ bool sorter::operator()(std::pair<std::string,double>& a, std::pair<std::string,
 {
 	return a.second > b.second;
 }
+
+//Used to sort the first table by average. Could add 1 to index and sort by std.dev
 bool sorter::operator()(std::pair<std::string, std::vector<double> >& a, std::pair<std::string, std::vector<double> >& b)
 {
 	return a.second[num_regions] > b.second[num_regions];

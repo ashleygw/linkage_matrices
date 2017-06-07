@@ -70,8 +70,11 @@ int main(int argc, char* argv[]) {
 		std::cout << "Number of top contributors:" << std::endl;
 		std::cin >> in;
 		man.set_num_top_contributors(atoi(in.c_str()));
+		std::cout << "Files building..." << std::endl;
+		man.writeFLT(file);
+		man.writeKC(file);
 		std::cout << "Files made." << std::endl;
-		return 1;
+		return 0;
 	}
 	std::cout << "Files made successfully." << std::endl;
 }
