@@ -47,11 +47,30 @@ int main(int argc, char* argv[]) {
 		man.writeFLT(file);
 		man.writeKC(file);
 	}
-	else{
+	/*else{
 		std::cout << "Please enter extra parameters." << std::endl;
 		std::cout << "It should be formatted \"input filename\" \"number of sectors\"\n"
 			<< "(optional)\"number of top contributors\""<< std::endl;
 		std::cout << "\n\nNo new files generated." << std::endl;
+		return 1;
+	}*/
+	else {
+		std::string in;
+		std::cout << "Enter input filename: " << std::endl;
+		std::cin >> in;
+		std::fstream file(in, std::ios::in);
+		if (!file.is_open()) {
+			std::cout << "File not found!\nEnter to exit.";
+			return 1;
+		}
+
+		std::cout << "Enter number of sectors per region:" << std::endl;
+		std::cin >> in;
+		man.set_sectors(atoi(in.c_str()));
+		std::cout << "Number of top contributors:" << std::endl;
+		std::cin >> in;
+		man.set_num_top_contributors(atoi(in.c_str()));
+		std::cout << "Files made." << std::endl;
 		return 1;
 	}
 	std::cout << "Files made successfully." << std::endl;

@@ -48,5 +48,6 @@ public:
 	bool operator()(std::pair<std::string, double>& a, std::pair<std::string, double>& b);
 	bool sorter::operator()(std::pair<std::string, std::vector<double> >& a, std::pair<std::string, std::vector<double> >& b);
 	int num_regions;
+	int _num_top_contributors;
 };
 #endif

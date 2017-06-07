@@ -26,20 +26,18 @@ void CSVhandler::sum()
 }
 
 //Used to build sectors and calculate mean and std dev
-//Each index in this vector consists of all sectors in a region in pair form
+//Each index in this vector consists of all sector sums in a region in double form
 void CSVhandler::build_regions()
 {
-	_regions.clear();//
+	_regions.clear();
 	std::vector<double> temp;
-	int counter = 0;
 	for (int i = 0; i <_sumpair.size()/_num_sectors; i++)
 	{
 		temp.clear();
 		for (int j = 0; j < _num_sectors; j++)
 		{
-			temp.push_back(_sumpair[j+counter*_num_sectors].second);
+			temp.push_back(_sumpair[j+i*_num_sectors].second);
 		}
-		counter++;
 		_regions.push_back(temp);
 	}
 }
@@ -78,6 +76,7 @@ void CSVhandler::build_sectors()
 	}
 	sorter sort;
 	sort.num_regions = _num_regions;
+	sort._num_top_contributors = _num_top_contributors;
 	std::sort(_sectors.begin(), _sectors.end(), sort);
 }
 
@@ -230,6 +229,7 @@ std::vector<std::pair<std::string, double>> CSVhandler::one_sector_top_contribut
 		to_sort.push_back(buildpair(i, index));
 	}
 	sorter sort;
+	sort._num_top_contributors = _num_top_contributors;
 	sort.num_regions = _num_regions;
 	std::sort(to_sort.begin(), to_sort.end(), sort);
 	std::vector<std::pair<std::string, double>> top_n;
@@ -275,5 +275,5 @@ bool sorter::operator()(std::pair<std::string,double>& a, std::pair<std::string,
 }
 bool sorter::operator()(std::pair<std::string, std::vector<double> >& a, std::pair<std::string, std::vector<double> >& b)
 {
-	return a.second[4] > b.second[4];
+	return a.second[num_regions] > b.second[num_regions];
 }
