@@ -1,4 +1,4 @@
-# SECTORAL AND SPATIAL LINKAGES IN THE EC PRODUCTION STRUCTURE
+# Forward Linkage Map and Total Forward Link Table Generator for EC Production Structures
 
 This program takes a Forward Linkage map and generates a total forward link table and Key Contributors table as demonstrated here:
 http://onlinelibrary.wiley.com/doi/10.1111/0022-4146.00053/abstract
