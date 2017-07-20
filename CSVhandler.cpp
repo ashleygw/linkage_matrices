@@ -111,14 +111,25 @@ void CSVhandler::writeCSV_FLT()
 void CSVhandler::writeCSV_KC()
 {
 	std::ofstream file;
+	std::string temp = "Key_Contributors(";
+	std::string temp2 = input_file;
+	temp += temp2 + ").csv";
+	std::unordered_map<std::string, int> key_sector_counter;
+	std::unordered_map<std::string, int> general_sector_counter;
 	int i, j, k;
 	std::vector<std::vector<double> > summer(_num_regions*_num_sectors);
-	file.open("Key_Contributors.csv");
+
+	file.open(temp.c_str());
+	std::cout << temp;
+	file << "Input filename: " << input_file << "\n";
 	double counter = 0;
 	for (i = 0; i < _num_sectors; i++)
 	{
+		key_sector_counter.clear();
+		general_sector_counter.clear();
 		for (j = 0; j < _num_regions; j++)
 		{
+			//Regions in columns. Writes each selected sector.
 			file << "," << _sector_names[i + j*_num_sectors] << ",,";
 		}
 		file << "\n";
@@ -129,7 +140,26 @@ void CSVhandler::writeCSV_KC()
 		{
 			for (k = 0; k < _num_regions; k++)
 			{
+				//Writes top n contributors
 				file << _all_top_contributors[i + k*_num_sectors][j].first << "," << _all_top_contributors[i + k*_num_sectors][j].second << ",,";
+				//Adds region specific contributor to map for counting purposes.
+				if (key_sector_counter.find(_all_top_contributors[i + k*_num_sectors][j].first) != key_sector_counter.end())
+				{
+					key_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first]++;
+				}
+				else
+				{
+					key_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first] = 1;
+				}
+				if (general_sector_counter.find(_all_top_contributors[i + k*_num_sectors][j].first.substr(1)) != general_sector_counter.end())
+				{
+					general_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first.substr(1)]++;
+				}
+				else 
+				{
+					general_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first.substr(1)] = 1;
+				}
+				//Calculate averages of top contributors
 				summer[i + k*_num_sectors].push_back(_all_top_contributors[i + k*_num_sectors][j].second);
 			}
 			file << "\n";
@@ -154,6 +184,57 @@ void CSVhandler::writeCSV_KC()
 		for (j = 0; j < _num_regions; j++)
 		{
 			file << "ratio," << summer[i + j*_num_sectors][0]/_sumvec[i + j*_num_sectors]*100 << ",,";
+		}
+		file << "\n";
+
+		//Section 2 Key Sectors
+		//Data is small enough to allow multiple passes
+		file << "Key Sectors\n";
+		for (j = _num_upperbound_reported_contributors; j >= _num_lowerbound_reported_contributors; --j)
+		{
+			counter = 0; // Used as boolean basically
+			if (j == _num_upperbound_reported_contributors)
+			{
+				file << j << " or more,";
+				for (auto it = key_sector_counter.begin(); it != key_sector_counter.end(); ++it)
+				{
+					if (it->second >= j)
+					{
+						file << it->first; //<< " (" << it->second << "),";
+						counter++;
+					}
+				}
+				if (counter == 0)
+					file << "None,";
+				file << "\n";
+			}
+			else
+			{
+				file << j << ",";
+				for (auto it = key_sector_counter.begin(); it != key_sector_counter.end(); ++it)
+				{
+					if (it->second == j)
+					{
+						file << it->first; //<< " (" << it->second << "),";
+						counter++;
+					}
+				}
+				if (counter == 0)
+					file << "None,";
+				file << "\n";
+			}
+			
+		}
+		
+		counter = 0;
+		file << "General Sector,";
+		for (auto it = general_sector_counter.begin(); it != general_sector_counter.end(); ++it)
+		{
+			if (it->second >= _num_regions)
+			{
+				file << it->first << ",";
+				counter++;
+			}
 		}
 		file << "\n\n";
 	}
@@ -195,6 +276,7 @@ void CSVhandler::writeKC(std::istream & input)
 }
 
 //https://stackoverflow.com/questions/1120140/how-can-i-read-and-parse-csv-files-in-c
+//Pretty basic but this is where this is from.
 void CSVhandler::readCSV(std::istream &input) {
 	std::string csvLine;
 	// read every line from the stream
@@ -253,6 +335,17 @@ void CSVhandler::set_all_top_contributors()
 void CSVhandler::set_num_top_contributors(int num)
 {
 	_num_top_contributors = num;
+}
+
+void CSVhandler::set_reported_contributors(int lower, int upper)
+{
+	_num_upperbound_reported_contributors = upper;
+	_num_lowerbound_reported_contributors = lower;
+}
+
+void CSVhandler::set_input_filename(char * in)
+{
+	input_file = in;
 }
 
 std::pair<std::string, double> CSVhandler::buildpair(int row, int col)

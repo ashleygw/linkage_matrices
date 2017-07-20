@@ -5,60 +5,45 @@
 
 int main(int argc, char* argv[]) {
 	CSVhandler man;
-	if (argc > 3) {
+	if (argc > 5) {
 		std::cout << "File: " << argv[1] << std::endl;
 		std::cout << "Sectors: " << atoi(argv[2]) << std::endl;
 		std::cout << "Top contributors: " << atoi(argv[3]) << std::endl;
+		std::cout << "Lower bound: " << atoi(argv[4]) << std::endl;
+		std::cout << "Upper bound: " << atoi(argv[5]) << std::endl;
+
 		std::fstream file(argv[1], std::ios::in);
 		if (!file.is_open()) {
 			std::cout << "File not found!\n";
 			return 1;
 		}
+
+		man.set_input_filename(argv[1]);
 		man.set_sectors(atoi(argv[2]));
 		man.set_num_top_contributors(atoi(argv[3]));
+		man.set_reported_contributors(atoi(argv[4]), atoi(argv[5]));
 		man.writeFLT(file);
 		man.writeKC(file);
 	}
-	else if (argc > 2) {
-		std::cout << "File: " << argv[1] << std::endl;
-		std::cout << "Sectors per region: " << atoi(argv[2]) << std::endl;
-		std::cout << "Top contributors: 3" << std::endl;
-		std::fstream file(argv[1], std::ios::in);
-		if (!file.is_open()) {
-			std::cout << "File not found!\n";
-			return 1;
-		}
-		man.set_sectors(atoi(argv[2]));
-		man.set_num_top_contributors(3);
-		man.writeFLT(file);
-		man.writeKC(file);
-	}
-	else if (argc > 1) {
-		std::cout << "Opening default input file: \"20Sector_FL_DP.csv\"" << std::endl;
-		std::fstream file("20Sector_FL_DP.csv", std::ios::in);
-		if (!file.is_open()) {
-			std::cout << "File not found!\n";
-			return 1;
-		}
-		man.set_sectors(atoi(argv[1]));
-		man.set_num_top_contributors(3);
-		std::cout << "Sectors per region: " << atoi(argv[1]) << std::endl;
-		std::cout << "Top contributors: 3" << std::endl;
-		man.writeFLT(file);
-		man.writeKC(file);
-	}
-	/*else{
-		std::cout << "Please enter extra parameters." << std::endl;
-		std::cout << "It should be formatted \"input filename\" \"number of sectors\"\n"
-			<< "(optional)\"number of top contributors\""<< std::endl;
-		std::cout << "\n\nNo new files generated." << std::endl;
-		return 1;
-	}*/
+	//Removed all other cases, needlessly confusing.
 	else {
 		std::string in;
+		//Variables are cheap, using only in results in strange error
+		//where inputfile is set as the last thing the user entered.
+		//I suspect it is part of cin's functionality
+		std::string file_in;
+
 		std::cout << "Enter input filename: " << std::endl;
-		std::cin >> in;
-		std::fstream file(in, std::ios::in);
+		std::cin >> file_in;
+
+		int temp_lower = 3;
+		int temp_upper = 4;
+
+		//Undefined behavior if string is empty
+		char *temp = &file_in[0u];
+		man.set_input_filename(temp);
+
+		std::fstream file(file_in, std::ios::in);
 		if (!file.is_open()) {
 			std::cout << "File not found!\nEnter to exit.";
 			return 1;
@@ -70,6 +55,13 @@ int main(int argc, char* argv[]) {
 		std::cout << "Number of top contributors:" << std::endl;
 		std::cin >> in;
 		man.set_num_top_contributors(atoi(in.c_str()));
+		std::cout << "Lower bound for reported key sectors:" << std::endl;
+		std::cin >> in;
+		temp_lower = stoi(in);
+		std::cout << "Upper bound for reported key sectors:" << std::endl;
+		std::cin >> in;
+		temp_upper = stoi(in);
+		man.set_reported_contributors(temp_lower, temp_upper);
 		std::cout << "Files building..." << std::endl;
 		man.writeFLT(file);
 		man.writeKC(file);
