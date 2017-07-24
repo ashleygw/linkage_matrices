@@ -9,13 +9,16 @@
 #include <algorithm>
 #include <unordered_map>
 
+typedef std::tuple<std::string, std::string, std::string> Triad;
+
 class CSVhandler {
 public:
 	std::vector<std::vector<std::string> > db;
 	void readCSV(std::istream &input);
 	void writeCSV_FLT();
 	void writeFLT(std::istream &input);
-	void writeKC(std::istream &input);
+	void writeKC(std::istream &input, bool);
+	void writeCSV_KT();
 	void sum();
 	void build_regions();
 	void build_sectors();
@@ -25,7 +28,10 @@ public:
 	void set_num_top_contributors(int);
 	void set_reported_contributors(int, int);
 	void set_input_filename(char*);
-	void writeCSV_KC();
+	void set_add_input_filename(char*);
+	void set_flag(bool);
+	void set_sector_names_no_regions();
+	void writeCSV_KC(bool);
 	void clear_data();
 	std::pair<std::string, double> buildpair(int, int);
 	std::vector<std::pair<std::string, double> > one_sector_top_contributors(int);
@@ -39,10 +45,19 @@ public:
 	std::vector<double> _sumvec;
 	std::vector<std::pair<std::string, double> > _sumpair;
 	std::vector<std::vector<double> > _regions;
+
+	//All sectors and their corresponding values
 	std::vector<std::pair<std::string,std::vector<double> > > _sectors;
+	//All Sector names with regions attached
 	std::vector<std::string> _sector_names;
+	//Only sector names
+	std::vector<std::string> _sector_names_no_region;
+
 	std::vector<std::vector<std::pair<std::string, double> > > _all_top_contributors;
+	std::vector<Triad> general_collection;
 	char* input_file = "";
+	char* additional_file = "";
+	bool forward_flag = false;
 };
 class sorter {
 public:

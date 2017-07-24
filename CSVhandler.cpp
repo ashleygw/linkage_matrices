@@ -20,7 +20,10 @@ void CSVhandler::sum()
 			total += std::stod(db[j+1][i+1]);
 		}
 		sum.push_back(total);
-		_sumpair.push_back(std::pair<std::string,double> (db[i+1][0], total));
+		//if (db[i+1][0][0] == '\"')
+			//_sumpair.push_back(std::pair<std::string, double>(db[i + 1][0].substr(1, db[i+1][0].length() - 2), total));
+		//else
+			_sumpair.push_back(std::pair<std::string,double> (db[i+1][0], total));
 	}
 	_sumvec = sum;
 }
@@ -49,7 +52,10 @@ void CSVhandler::build_sectors()
 	for (int i = 0; i < _num_sectors; i++)
 	{
 		std::pair<std::string, std::vector<double> > temp;
-		temp.first = db[i + 1][0];
+		//if (db[i + 1][0][0] == '/"')
+			//temp.first = db[i + 1][0].substr(1, db[i + 1][0].length() - 2);
+		//else
+			temp.first = db[i + 1][0];
 		_sectors.push_back(temp);
 	}
 	_num_regions = _sumpair.size() / _num_sectors;
@@ -86,19 +92,35 @@ void CSVhandler::writeCSV_FLT()
 	int i = 0;
 	int j = 0;
 	std::ofstream file;
-	file.open("Forward_Link_Table.csv");
-	file << "Table 1: Total Forward Link Table\n,";
+	std::string temp = "Forward_Link_Table(";
+	std::string temp2 = input_file;
+	temp += temp2 + ").csv";
+	file.open(temp.c_str());
+	file << "Table 1: Total Forward Link Table," << "Filename: " << input_file << "\n,";
 	for (i = 1; i < _num_regions+1; i++)
 	{
-		file << db[0][i*_num_sectors];
+		//if (db[0][i*_num_sectors][0] == '\"')
+			//file << db[0][i*_num_sectors].substr(1, db[0][i*_num_sectors].length() - 2);
+		//else
+			file << db[0][i*_num_sectors];
 		file << ",";
 	}
 	file << "Average," << "Std Dev";
 	file << "\n";
 	for (i = 0; i < _sectors.size(); i++)
 	{
-		for (int j = 2; j < _sectors[i].first.length(); ++j)
-			file << _sectors[i].first[j];
+		//Writes sector names to file
+		if (_sectors[i].first[0] == '\"')
+		{
+			for (int j = 3; j < _sectors[i].first.length() - 1; ++j)
+				file << _sectors[i].first[j];
+		}
+		else
+		{
+			for (int j = 2; j < _sectors[i].first.length(); ++j)
+				file << _sectors[i].first[j];
+		}
+		
 		file << ",";
 		for (j = 0; j < _sectors[i].second.size(); j++)
 		{
@@ -108,7 +130,7 @@ void CSVhandler::writeCSV_FLT()
 	}
 }
 
-void CSVhandler::writeCSV_KC()
+void CSVhandler::writeCSV_KC(bool is_forward)
 {
 	std::ofstream file;
 	std::string temp = "Key_Contributors(";
@@ -120,7 +142,6 @@ void CSVhandler::writeCSV_KC()
 	std::vector<std::vector<double> > summer(_num_regions*_num_sectors);
 
 	file.open(temp.c_str());
-	std::cout << temp;
 	file << "Input filename: " << input_file << "\n";
 	double counter = 0;
 	for (i = 0; i < _num_sectors; i++)
@@ -142,23 +163,40 @@ void CSVhandler::writeCSV_KC()
 			{
 				//Writes top n contributors
 				file << _all_top_contributors[i + k*_num_sectors][j].first << "," << _all_top_contributors[i + k*_num_sectors][j].second << ",,";
+				std::string name = _all_top_contributors[i + k*_num_sectors][j].first;
 				//Adds region specific contributor to map for counting purposes.
-				if (key_sector_counter.find(_all_top_contributors[i + k*_num_sectors][j].first) != key_sector_counter.end())
+				if (key_sector_counter.find(name) != key_sector_counter.end())
 				{
-					key_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first]++;
+					key_sector_counter[name]++;
 				}
 				else
 				{
-					key_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first] = 1;
+					key_sector_counter[name] = 1;
 				}
-				if (general_sector_counter.find(_all_top_contributors[i + k*_num_sectors][j].first.substr(1)) != general_sector_counter.end())
+				//Having a - at the start makes Excel treat this is a formula. Breaks program.
+				if (name[0] == '\"')
 				{
-					general_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first.substr(1)]++;
+					if (general_sector_counter.find(name.substr(3, name.length() - 4)) != general_sector_counter.end())
+					{
+						general_sector_counter[name.substr(3, name.length() - 4)]++;
+					}
+					else
+					{
+						general_sector_counter[name.substr(3, name.length() - 4)] = 1;
+					}
 				}
-				else 
+				else
 				{
-					general_sector_counter[_all_top_contributors[i + k*_num_sectors][j].first.substr(1)] = 1;
+					if (general_sector_counter.find(name.substr(1)) != general_sector_counter.end())
+					{
+						general_sector_counter[name.substr(1)]++;
+					}
+					else
+					{
+						general_sector_counter[name.substr(1)] = 1;
+					}
 				}
+				
 				//Calculate averages of top contributors
 				summer[i + k*_num_sectors].push_back(_all_top_contributors[i + k*_num_sectors][j].second);
 			}
@@ -200,7 +238,7 @@ void CSVhandler::writeCSV_KC()
 				{
 					if (it->second >= j)
 					{
-						file << it->first; //<< " (" << it->second << "),";
+						file << it->first << ","; //<< " (" << it->second << "),";
 						counter++;
 					}
 				}
@@ -232,8 +270,15 @@ void CSVhandler::writeCSV_KC()
 		{
 			if (it->second >= _num_regions)
 			{
-				file << it->first << ",";
-				counter++;
+				file << it->first << "(" << it->second << "),";
+
+				//form is current sector - found notable sector - forward or backward
+				//This is stored so that if the user wants a KCT these values don't have to be
+				//Calculated again.
+				if(is_forward)
+					general_collection.push_back(Triad(_sector_names[i].substr(1), it->first, "F"));
+				else
+					general_collection.push_back(Triad(_sector_names[i].substr(1), it->first, "B"));
 			}
 		}
 		file << "\n\n";
@@ -263,7 +308,7 @@ void CSVhandler::writeFLT(std::istream & input)
 }
 
 //Does everything needed for KC
-void CSVhandler::writeKC(std::istream & input)
+void CSVhandler::writeKC(std::istream & input, bool forward_table)
 {
 	clear_data();
 	readCSV(input);
@@ -272,7 +317,75 @@ void CSVhandler::writeKC(std::istream & input)
 	build_regions();
 	build_sectors();
 	set_all_top_contributors();
-	writeCSV_KC();
+	writeCSV_KC(forward_table);
+}
+
+void CSVhandler::writeCSV_KT()
+{
+	std::ofstream file;
+	std::string temp = "FL_BL_Table(";
+	std::string temp2 = input_file;
+	temp += temp2 + ").csv";
+	file.open(temp.c_str());
+	file << "Input filenames:, " << input_file << "," << additional_file << "\n,";
+	int i;
+	std::unordered_map<std::string, int> sec_counter;
+	//Write sectors to top
+	for (i = 0; i < _num_sectors; ++i)
+	{
+		file << _sector_names_no_region[i] << ",";
+
+		//Maps sector names to number at the same time
+		sec_counter[_sector_names_no_region[i]] = i;
+	}
+
+	file << "\n";
+	//First write sector name, then if that sector has a general contributor, 
+	//write that in the appropriate place.
+	
+	for (i = 0; i < _num_sectors; ++i)
+	{
+		//write sector name
+		file << _sector_names_no_region[i] << ",";
+
+		//check general collection
+		std::vector<std::string> write_buffer(_num_sectors);
+		for (int j = 0; j < general_collection.size(); ++j)
+		{
+			int index = 0;
+			//General collection has sector name
+			if (std::get<0>(general_collection[j]) == _sector_names_no_region[i])
+			{
+				//Find which sector this corresponds too
+				std::string contributor = std::get<1>(general_collection[j]);
+				auto it = std::find(_sector_names_no_region.begin(), _sector_names_no_region.end(), contributor);
+				if (it == _sector_names_no_region.end())
+				{
+					//This should not happen oh no
+					std::cout << "Critical naming error" << std::endl;
+				}
+				else
+				{
+					index = std::distance(_sector_names_no_region.begin(), it);
+				}
+
+				if (write_buffer[index] == "F" || write_buffer[index] == "B")
+					write_buffer[index] = "*";
+				else
+					write_buffer[index] = std::get<2>(general_collection[j]);
+			}
+		}
+
+		//Write to file using the buffer
+		for (int j = 0; j < write_buffer.size(); ++j)
+		{
+			if (write_buffer[j] == "F" || write_buffer[j] == "B" || write_buffer[j] == "*")
+				file << write_buffer[j] << ",";
+			else
+				file << ",";
+		}
+		file << "\n";
+	}
 }
 
 //https://stackoverflow.com/questions/1120140/how-can-i-read-and-parse-csv-files-in-c
@@ -298,7 +411,11 @@ void CSVhandler::set_sector_names()
 	std::vector<std::string> temp;
 	for (int i = 1; i < db.size(); i++)
 	{
-		temp.push_back(db[i][0]);
+		//Deal with quotes messing up the csv
+		//if (db[i][0][0] == '\"')
+			//temp.push_back(db[i][0].substr(1, db[i][0].length() - 2));
+		//else
+			temp.push_back(db[i][0]);
 	}
 	_sector_names = temp;
 }
@@ -346,6 +463,31 @@ void CSVhandler::set_reported_contributors(int lower, int upper)
 void CSVhandler::set_input_filename(char * in)
 {
 	input_file = in;
+}
+
+void CSVhandler::set_add_input_filename(char * name)
+{
+	additional_file = name;
+}
+
+void CSVhandler::set_flag(bool boo)
+{
+	forward_flag = boo;
+}
+
+void CSVhandler::set_sector_names_no_regions()
+{
+	for (int i = 0; i < _num_sectors; ++i)
+	{
+		if (_sector_names[i][0] == '\"')
+		{
+			_sector_names_no_region.push_back(_sector_names[i].substr(3, _sector_names[i].length() - 4));
+		}
+		else
+		{
+			_sector_names_no_region.push_back(_sector_names[i].substr(1));
+		}
+	}
 }
 
 std::pair<std::string, double> CSVhandler::buildpair(int row, int col)
