@@ -5,6 +5,7 @@
 
 int main(int argc, char* argv[]) {
 	CSVhandler man;
+
 	if (argc > 5) {
 		std::cout << "File: " << argv[1] << std::endl;
 		std::cout << "Sectors: " << atoi(argv[2]) << std::endl;
@@ -49,6 +50,8 @@ int main(int argc, char* argv[]) {
 		//Undefined behavior if string is empty
 		char *temp = &file_in[0u];
 		man.set_input_filename(temp);
+		
+		
 
 		std::fstream file(file_in, std::ios::in);
 		if (!file.is_open()) {
@@ -69,7 +72,8 @@ int main(int argc, char* argv[]) {
 		std::cin >> in;
 		temp_upper = stoi(in);
 		man.set_reported_contributors(temp_lower, temp_upper);
-		
+
+		//While loops protect againt unintentional misshits ruining patience
 		while (1)
 		{
 			std::cout << "Generate common key contributors table? (y/n) " << std::endl;
@@ -83,6 +87,7 @@ int main(int argc, char* argv[]) {
 					std::fstream add_file(add_file_in, std::ios::in);
 					if (!add_file.is_open()) {
 						std::cout << "File not found!" << std::endl;
+						continue;
 					}
 					else
 					{
@@ -110,7 +115,6 @@ int main(int argc, char* argv[]) {
 						}
 						break;
 					}
-					//probably will never hit this
 					break;
 				}
 				break;
@@ -128,16 +132,28 @@ int main(int argc, char* argv[]) {
 		
 			
 		man.writeFLT(file);
+		man.current_file = temp;
 		man.writeKC(file, !man.forward_flag);
-		man.writeKC(add_file, man.forward_flag);
+		man.clear_db();
 		if (man.additional_file != "")
 		{
+			//I don't like doing it this way
+			char *temp3 = &add_file_in[0u];
+			man.current_file = temp3;
+			
+			std::fstream file2(add_file_in, std::ios::in);
+			if (!file2.is_open()) {
+				std::cout << "File not found!";
+				return 1;
+			}
+			
+			man.writeFLT(file2);
+			man.writeKC(file2, man.forward_flag);
+
 			man.set_sector_names_no_regions();
 			man.writeCSV_KT();
 		}
 			
 		std::cout << "Files made." << std::endl;
-		return 0;
 	}
-	std::cout << "Files made successfully." << std::endl;
 }

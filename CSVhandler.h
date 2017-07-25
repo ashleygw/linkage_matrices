@@ -33,6 +33,7 @@ public:
 	void set_sector_names_no_regions();
 	void writeCSV_KC(bool);
 	void clear_data();
+	void clear_db();
 	std::pair<std::string, double> buildpair(int, int);
 	std::vector<std::pair<std::string, double> > one_sector_top_contributors(int);
 
@@ -42,6 +43,7 @@ public:
 	int _num_upperbound_reported_contributors = 4;
 	int _num_lowerbound_reported_contributors = 3;
 
+	//Used in building the Forward Link table
 	std::vector<double> _sumvec;
 	std::vector<std::pair<std::string, double> > _sumpair;
 	std::vector<std::vector<double> > _regions;
@@ -55,8 +57,12 @@ public:
 
 	std::vector<std::vector<std::pair<std::string, double> > > _all_top_contributors;
 	std::vector<Triad> general_collection;
+
 	char* input_file = "";
 	char* additional_file = "";
+	char* current_file = "";
+
+	//Is the current loaded database a forward link table
 	bool forward_flag = false;
 };
 class sorter {
