@@ -72,8 +72,8 @@ void CSVhandler::build_sectors()
 			counter += (k - mean)*(k - mean);
 		sector.push_back(sqrt(counter / _num_regions));
 		_sectors[i].second = sector;
-		//Sort by average
 	}
+	//Sort by average
 	sorter sort;
 	sort.num_regions = _num_regions;
 	sort._num_top_contributors = _num_top_contributors;
@@ -85,6 +85,7 @@ void CSVhandler::writeCSV_FLT()
 {
 	int i = 0;
 	int j = 0;
+	//Building filename
 	std::ofstream file;
 	std::string temp = "Forward_Link_Table(";
 	std::string temp2 = current_file;
@@ -121,13 +122,15 @@ void CSVhandler::writeCSV_FLT()
 	}
 }
 
-void CSVhandler::writeCSV_KC(bool is_forward)
+void CSVhandler::writeCSV_CC(bool is_forward)
 {
+	//Builds filename
 	std::ofstream file;
-	std::string temp = "Key_Contributors(";
+	std::string temp = "Critical_Contributors(";
 	std::string temp2 = current_file;
 	temp += temp2 + ").csv";
-	std::unordered_map<std::string, int> key_sector_counter;
+
+	std::unordered_map<std::string, int> critical_sector_counter;
 	std::unordered_map<std::string, int> general_sector_counter;
 	int i, j, k;
 	std::vector<std::vector<double> > summer(_num_regions*_num_sectors);
@@ -137,7 +140,7 @@ void CSVhandler::writeCSV_KC(bool is_forward)
 	double counter = 0;
 	for (i = 0; i < _num_sectors; i++)
 	{
-		key_sector_counter.clear();
+		critical_sector_counter.clear();
 		general_sector_counter.clear();
 		for (j = 0; j < _num_regions; j++)
 		{
@@ -156,13 +159,13 @@ void CSVhandler::writeCSV_KC(bool is_forward)
 				file << _all_top_contributors[i + k*_num_sectors][j].first << "," << _all_top_contributors[i + k*_num_sectors][j].second << ",,";
 				std::string name = _all_top_contributors[i + k*_num_sectors][j].first;
 				//Adds region specific contributor to map for counting purposes.
-				if (key_sector_counter.find(name) != key_sector_counter.end())
+				if (critical_sector_counter.find(name) != critical_sector_counter.end())
 				{
-					key_sector_counter[name]++;
+					critical_sector_counter[name]++;
 				}
 				else
 				{
-					key_sector_counter[name] = 1;
+					critical_sector_counter[name] = 1;
 				}
 				//Having a - at the start makes Excel treat this is a formula. Breaks program.
 				if (name[0] == '\"')
@@ -216,16 +219,16 @@ void CSVhandler::writeCSV_KC(bool is_forward)
 		}
 		file << "\n";
 
-		//Section 2 Key Sectors
+		//Section 2 Critical Sectors
 		//Data is small enough to allow multiple passes
-		file << "Key Sectors\n";
+		file << "Critical Sectors\n";
 		for (j = _num_upperbound_reported_contributors; j >= _num_lowerbound_reported_contributors; --j)
 		{
 			counter = 0; // Used as boolean basically
 			if (j == _num_upperbound_reported_contributors)
 			{
 				file << j << " or more,";
-				for (auto it = key_sector_counter.begin(); it != key_sector_counter.end(); ++it)
+				for (auto it = critical_sector_counter.begin(); it != critical_sector_counter.end(); ++it)
 				{
 					if (it->second >= j)
 					{
@@ -240,11 +243,11 @@ void CSVhandler::writeCSV_KC(bool is_forward)
 			else
 			{
 				file << j << ",";
-				for (auto it = key_sector_counter.begin(); it != key_sector_counter.end(); ++it)
+				for (auto it = critical_sector_counter.begin(); it != critical_sector_counter.end(); ++it)
 				{
 					if (it->second == j)
 					{
-						file << it->first; //<< " (" << it->second << "),";
+						file << it->first << ","; //<< " (" << it->second << "),";
 						counter++;
 					}
 				}
@@ -259,7 +262,8 @@ void CSVhandler::writeCSV_KC(bool is_forward)
 		file << "General Sector,";
 		for (auto it = general_sector_counter.begin(); it != general_sector_counter.end(); ++it)
 		{
-			if (it->second >= _num_regions)
+			//if (it->second >= _num_regions)
+			if (it->second >= _general_sector_contributors)
 			{
 				file << it->first << "(" << it->second << "),";
 
@@ -308,7 +312,7 @@ void CSVhandler::writeFLT(std::istream & input)
 }
 
 //Does everything needed for KC
-void CSVhandler::writeKC(std::istream & input, bool forward_table)
+void CSVhandler::writeCC(std::istream & input, bool forward_table)
 {
 	clear_data();
 	readCSV(input);
@@ -317,10 +321,10 @@ void CSVhandler::writeKC(std::istream & input, bool forward_table)
 	build_regions();
 	build_sectors();
 	set_all_top_contributors();
-	writeCSV_KC(forward_table);
+	writeCSV_CC(forward_table);
 }//////////////AT THE END OF FIOLE!??
 
-void CSVhandler::writeCSV_KT()
+void CSVhandler::writeCSV_CT()
 {
 	std::ofstream file;
 	std::string temp = "FL_BL_Table(";
@@ -328,7 +332,8 @@ void CSVhandler::writeCSV_KT()
 	std::string temp3 = additional_file;
 	temp += temp2 + " " + temp3 + ").csv";
 	file.open(temp.c_str());
-	file << "Input filenames:, " << input_file << "," << additional_file << "\n,";
+	file << "Input filenames:,,, " << input_file << "," << additional_file << "\n";
+	file << "General Threshold:,,," << _general_sector_contributors << "\n,";
 	int i;
 	std::unordered_map<std::string, int> sec_counter;
 	//Write sectors to top
@@ -464,6 +469,11 @@ void CSVhandler::set_reported_contributors(int lower, int upper)
 {
 	_num_upperbound_reported_contributors = upper;
 	_num_lowerbound_reported_contributors = lower;
+}
+
+void CSVhandler::set_general_sector_contributors(int in)
+{
+	_general_sector_contributors = in;
 }
 
 void CSVhandler::set_input_filename(char * in)

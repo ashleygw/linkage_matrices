@@ -3,9 +3,11 @@
 #include <string>
 #include "CSVhandler.h"
 
+//This has been compiled in Visual Studio. C++11
 int main(int argc, char* argv[]) {
 	CSVhandler man;
 
+	//Case exists in case only the KC and FLT for one file need to be generated
 	if (argc > 5) {
 		std::cout << "File: " << argv[1] << std::endl;
 		std::cout << "Sectors: " << atoi(argv[2]) << std::endl;
@@ -25,15 +27,12 @@ int main(int argc, char* argv[]) {
 		man.set_reported_contributors(atoi(argv[4]), atoi(argv[5]));
 		std::cout << "Files building..." << std::endl;
 		man.writeFLT(file);
-		man.writeKC(file, 1);
+		man.writeCC(file, 1);
 		std::cout << "Files made." << std::endl;
-		
-
-
 	}
 	//Removed all other cases, needlessly confusing.
 	else {
-		//Variables are cheap, using only in results in strange error
+		//Variables are cheap, using only "in" results in strange error
 		//where inputfile is set as the last thing the user entered.
 		//I suspect it is part of cin's functionality and the way I 
 		//set the input filename
@@ -50,8 +49,6 @@ int main(int argc, char* argv[]) {
 		//Undefined behavior if string is empty
 		char *temp = &file_in[0u];
 		man.set_input_filename(temp);
-		
-		
 
 		std::fstream file(file_in, std::ios::in);
 		if (!file.is_open()) {
@@ -65,10 +62,15 @@ int main(int argc, char* argv[]) {
 		std::cout << "Number of top contributors:" << std::endl;
 		std::cin >> in;
 		man.set_num_top_contributors(atoi(in.c_str()));
-		std::cout << "Lower bound for reported key sectors:" << std::endl;
+
+		std::cout << "Threshold for reporting general sectors:" << std::endl;
+		std::cin >> in;
+		man.set_general_sector_contributors(atoi(in.c_str()));
+
+		std::cout << "Lower bound for reported critical sectors:" << std::endl;
 		std::cin >> in;
 		temp_lower = stoi(in);
-		std::cout << "Upper bound for reported key sectors:" << std::endl;
+		std::cout << "Upper bound for reported critical sectors:" << std::endl;
 		std::cin >> in;
 		temp_upper = stoi(in);
 		man.set_reported_contributors(temp_lower, temp_upper);
@@ -76,7 +78,7 @@ int main(int argc, char* argv[]) {
 		//While loops protect againt unintentional misshits ruining patience
 		while (1)
 		{
-			std::cout << "Generate common key contributors table? (y/n) " << std::endl;
+			std::cout << "Generate common critical contributors table? (y/n) " << std::endl;
 			std::cin >> in;
 			if (in == "y")
 			{
@@ -130,28 +132,28 @@ int main(int argc, char* argv[]) {
 		}
 		std::cout << "Files building..." << std::endl;
 		
-			
-		man.writeFLT(file);
+		//This program writes all the files now
 		man.current_file = temp;
-		man.writeKC(file, !man.forward_flag);
+		man.writeFLT(file);
+		man.writeCC(file, !man.forward_flag);
 		man.clear_db();
+
 		if (man.additional_file != "")
 		{
-			//I don't like doing it this way
+			//TODO use a different read in method
 			char *temp3 = &add_file_in[0u];
 			man.current_file = temp3;
 			
-			std::fstream file2(add_file_in, std::ios::in);
-			if (!file2.is_open()) {
+			std::fstream add_temp_file(add_file_in, std::ios::in);
+			if (!add_temp_file.is_open()) {
 				std::cout << "File not found!";
 				return 1;
 			}
 			
-			man.writeFLT(file2);
-			man.writeKC(file2, man.forward_flag);
-
+			man.writeFLT(add_temp_file);
+			man.writeCC(add_temp_file, man.forward_flag);
 			man.set_sector_names_no_regions();
-			man.writeCSV_KT();
+			man.writeCSV_CT();
 		}
 			
 		std::cout << "Files made." << std::endl;

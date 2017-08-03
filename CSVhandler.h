@@ -17,8 +17,8 @@ public:
 	void readCSV(std::istream &input);
 	void writeCSV_FLT();
 	void writeFLT(std::istream &input);
-	void writeKC(std::istream &input, bool);
-	void writeCSV_KT();
+	void writeCC(std::istream &input, bool);
+	void writeCSV_CT();
 	void sum();
 	void build_regions();
 	void build_sectors();
@@ -27,11 +27,12 @@ public:
 	void set_all_top_contributors();
 	void set_num_top_contributors(int);
 	void set_reported_contributors(int, int);
+	void set_general_sector_contributors(int);
 	void set_input_filename(char*);
 	void set_add_input_filename(char*);
 	void set_flag(bool);
 	void set_sector_names_no_regions();
-	void writeCSV_KC(bool);
+	void writeCSV_CC(bool);
 	void clear_data();
 	void clear_db();
 	std::pair<std::string, double> buildpair(int, int);
@@ -42,6 +43,7 @@ public:
 	int _num_top_contributors = 3;
 	int _num_upperbound_reported_contributors = 4;
 	int _num_lowerbound_reported_contributors = 3;
+	int _general_sector_contributors = 4;
 
 	//Used in building the Forward Link table
 	std::vector<double> _sumvec;
