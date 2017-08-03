@@ -121,7 +121,10 @@ void CSVhandler::writeCSV_FLT()
 		file << "\n";
 	}
 }
-
+double round(double in, double precision)
+{
+	return (int)(in / precision) * precision;
+}
 void CSVhandler::writeCSV_CC(bool is_forward)
 {
 	//Builds filename
@@ -133,6 +136,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 	std::unordered_map<std::string, int> critical_sector_counter;
 	std::unordered_map<std::string, int> general_sector_counter;
 	int i, j, k;
+	double precision = 0.01;
 	std::vector<std::vector<double> > summer(_num_regions*_num_sectors);
 
 	file.open(temp.c_str());
@@ -156,7 +160,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			for (k = 0; k < _num_regions; k++)
 			{
 				//Writes top n contributors
-				file << _all_top_contributors[i + k*_num_sectors][j].first << "," << _all_top_contributors[i + k*_num_sectors][j].second << ",,";
+				file << _all_top_contributors[i + k*_num_sectors][j].first << "," << round(_all_top_contributors[i + k*_num_sectors][j].second, precision) << ",,";
 				std::string name = _all_top_contributors[i + k*_num_sectors][j].first;
 				//Adds region specific contributor to map for counting purposes.
 				if (critical_sector_counter.find(name) != critical_sector_counter.end())
@@ -204,18 +208,18 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			{
 				counter += summer[i + j*_num_sectors][k];
 			}
-			file << "sum," << counter << ",,";
+			file << "sum," << round(counter, precision) << ",,";
 			summer[i + j*_num_sectors][0] = counter;
 		}
 		file << "\n";
 		for (j = 0; j < _num_regions; j++)
 		{
-			file << "TOTAL," << _sumvec[i + j*_num_sectors] << ",,";
+			file << "TOTAL," << round(_sumvec[i + j*_num_sectors], precision) << ",,";
 		}
 		file << "\n";
 		for (j = 0; j < _num_regions; j++)
 		{
-			file << "ratio," << summer[i + j*_num_sectors][0]/_sumvec[i + j*_num_sectors]*100 << ",,";
+			file << "ratio," << round(summer[i + j*_num_sectors][0]/_sumvec[i + j*_num_sectors]*100, precision) << ",,";
 		}
 		file << "\n";
 
@@ -322,7 +326,7 @@ void CSVhandler::writeCC(std::istream & input, bool forward_table)
 	build_sectors();
 	set_all_top_contributors();
 	writeCSV_CC(forward_table);
-}//////////////AT THE END OF FIOLE!??
+}
 
 void CSVhandler::writeCSV_CT()
 {
@@ -368,7 +372,7 @@ void CSVhandler::writeCSV_CT()
 				auto it = std::find(_sector_names_no_region.begin(), _sector_names_no_region.end(), contributor);
 				if (it == _sector_names_no_region.end())
 				{
-					//This should not happen oh no
+					//This should not happen
 					std::cout << "Critical naming error. Try renaming sectors in form H4_Finance for example." << std::endl;
 				}
 				else
