@@ -133,6 +133,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Files building..." << std::endl;
 		
 		//This program writes all the files now
+		
 		man.current_file = temp;
 		man.writeFLT(file);
 		man.writeCC(file, !man.forward_flag);
@@ -149,10 +150,9 @@ int main(int argc, char* argv[]) {
 				std::cout << "File not found!";
 				return 1;
 			}
-			
 			man.writeFLT(add_temp_file);
 			man.writeCC(add_temp_file, man.forward_flag);
-			man.set_sector_names_no_regions();
+			
 			man.writeCSV_CT();
 		}
 			

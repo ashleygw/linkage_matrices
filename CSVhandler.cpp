@@ -132,24 +132,28 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 	std::string temp = "Critical_Contributors(";
 	std::string temp2 = current_file;
 	temp += temp2 + ").csv";
-
-	std::unordered_map<std::string, int> critical_sector_counter;
-	std::unordered_map<std::string, int> general_sector_counter;
+	set_sector_names_no_regions();
+	std::unordered_map<std::string, int> critical_sector_counter, general_sector_counter;
 	int i, j, k;
-	double precision = 0.01;
+	double precision = 0.01; // rounding
 	std::vector<std::vector<double> > summer(_num_regions*_num_sectors);
-
+	std::vector<double> sigma;
+	double ratios, TBLs;
 	file.open(temp.c_str());
 	file << "Input filename: " << current_file << "\n";
 	double counter = 0;
 	for (i = 0; i < _num_sectors; i++)
 	{
+		ratios = 0;
+		TBLs = 0;
+		sigma.clear();
 		critical_sector_counter.clear();
 		general_sector_counter.clear();
+		file << _sector_names_no_region[i] << " Sector\n";
 		for (j = 0; j < _num_regions; j++)
 		{
 			//Regions in columns. Writes each selected sector.
-			file << "," << _sector_names[i + j*_num_sectors] << ",,";
+			file << "Critical," << _sector_names[i + j*_num_sectors] << ",,";
 		}
 		file << "\n";
 		//Finds top "size of pairlist" contributors.
@@ -198,8 +202,10 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 				//Calculate averages of top contributors
 				summer[i + k*_num_sectors].push_back(_all_top_contributors[i + k*_num_sectors][j].second);
 			}
-			file << "\n";
+			//if(j < _all_top_contributors[i].size() - 1)
+				file << "\n";
 		}
+		//file << "TBL Summary\n";
 		counter = 0;
 		for (j = 0; j < _num_regions; j++)
 		{
@@ -208,27 +214,32 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			{
 				counter += summer[i + j*_num_sectors][k];
 			}
-			file << "sum," << round(counter, precision) << ",,";
+			file << "Sub Total BL," << round(counter, precision) << ",,";
 			summer[i + j*_num_sectors][0] = counter;
 		}
 		file << "\n";
 		for (j = 0; j < _num_regions; j++)
 		{
 			file << "TOTAL," << round(_sumvec[i + j*_num_sectors], precision) << ",,";
+			TBLs += round(_sumvec[i + j*_num_sectors], precision);
+			sigma.push_back(_sumvec[i + j*_num_sectors]);
 		}
 		file << "\n";
 		for (j = 0; j < _num_regions; j++)
 		{
-			file << "ratio," << round(summer[i + j*_num_sectors][0]/_sumvec[i + j*_num_sectors]*100, precision) << ",,";
+			file << "Ratio," << round(summer[i + j*_num_sectors][0]/_sumvec[i + j*_num_sectors]*100, precision) << ",,";
+			ratios += round(summer[i + j*_num_sectors][0] / _sumvec[i + j*_num_sectors] * 100, precision);
 		}
 		file << "\n";
 
 		//Section 2 Critical Sectors
 		//Data is small enough to allow multiple passes
-		file << "Critical Sectors\n";
+		file << "Common Critical Sectors,,,,,,,,,TBL Summary\n";
+		int indexer = 0;
 		for (j = _num_upperbound_reported_contributors; j >= _num_lowerbound_reported_contributors; --j)
 		{
 			counter = 0; // Used as boolean basically
+			int another_counter = 0; // used to limit commas for file write
 			if (j == _num_upperbound_reported_contributors)
 			{
 				file << j << " or more,";
@@ -237,6 +248,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					if (it->second >= j)
 					{
 						file << it->first << ","; //<< " (" << it->second << "),";
+						another_counter++;
 						counter++;
 					}
 				}
@@ -497,6 +509,7 @@ void CSVhandler::set_flag(bool boo)
 
 void CSVhandler::set_sector_names_no_regions()
 {
+	_sector_names_no_region.clear();
 	for (int i = 0; i < _num_sectors; ++i)
 	{
 		if (_sector_names[i][0] == '\"')
