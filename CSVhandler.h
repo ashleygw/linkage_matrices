@@ -8,7 +8,8 @@
 #include <math.h>
 #include <algorithm>
 #include <unordered_map>
-
+#include <functional>
+#include <numeric>
 typedef std::tuple<std::string, std::string, std::string> Triad;
 
 class CSVhandler {

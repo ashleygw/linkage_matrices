@@ -138,10 +138,11 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 	double precision = 0.01; // rounding
 	std::vector<std::vector<double> > summer(_num_regions*_num_sectors);
 	std::vector<double> sigma;
-	double ratios, TBLs;
+	double ratios, TBLs, stddev;
 	file.open(temp.c_str());
 	file << "Input filename: " << current_file << "\n";
 	double counter = 0;
+	double left_indexer = 1;
 	for (i = 0; i < _num_sectors; i++)
 	{
 		ratios = 0;
@@ -149,13 +150,16 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 		sigma.clear();
 		critical_sector_counter.clear();
 		general_sector_counter.clear();
+		file << left_indexer << ",";
 		file << _sector_names_no_region[i] << " Sector\n";
+		file << left_indexer << ",";
 		for (j = 0; j < _num_regions; j++)
 		{
 			//Regions in columns. Writes each selected sector.
 			file << "Critical," << _sector_names[i + j*_num_sectors] << ",,";
 		}
 		file << "\n";
+		file << left_indexer << ",";
 		//Finds top "size of pairlist" contributors.
 		//Can change reported top contributors by modifying number of pairs calculated
 		//in one_sector_top_contributors.
@@ -204,6 +208,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			}
 			//if(j < _all_top_contributors[i].size() - 1)
 				file << "\n";
+				file << left_indexer << ",";
 		}
 		//file << "TBL Summary\n";
 		counter = 0;
@@ -218,6 +223,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			summer[i + j*_num_sectors][0] = counter;
 		}
 		file << "\n";
+		file << left_indexer << ",";
 		for (j = 0; j < _num_regions; j++)
 		{
 			file << "TOTAL," << round(_sumvec[i + j*_num_sectors], precision) << ",,";
@@ -225,17 +231,30 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			sigma.push_back(_sumvec[i + j*_num_sectors]);
 		}
 		file << "\n";
+		file << left_indexer << ",";
 		for (j = 0; j < _num_regions; j++)
 		{
 			file << "Ratio," << round(summer[i + j*_num_sectors][0]/_sumvec[i + j*_num_sectors]*100, precision) << ",,";
 			ratios += round(summer[i + j*_num_sectors][0] / _sumvec[i + j*_num_sectors] * 100, precision);
 		}
 		file << "\n";
+		file << left_indexer << ",";
 
+		//calculate sigma https://goo.gl/BC36Tq
+		double sum = std::accumulate(sigma.begin(), sigma.end(), 0.0);
+		double mean = sum / sigma.size();
+
+		std::vector<double> diff(sigma.size());
+		std::transform(sigma.begin(), sigma.end(), diff.begin(), [mean](double x) { return x - mean; });
+		double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+		stddev = std::sqrt(sq_sum / sigma.size());
+		
 		//Section 2 Critical Sectors
 		//Data is small enough to allow multiple passes
 		file << "Common Critical Sectors,,,,,,,,,TBL Summary\n";
+		file << left_indexer << ",";
 		int indexer = 0;
+		int new_catagory_counter = 2;
 		for (j = _num_upperbound_reported_contributors; j >= _num_lowerbound_reported_contributors; --j)
 		{
 			counter = 0; // Used as boolean basically
@@ -253,8 +272,38 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					}
 				}
 				if (counter == 0)
+				{
 					file << "None,";
+					another_counter++;
+				}
+				if (new_catagory_counter == 2) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "Ave-TBL," << round(TBLs / _num_regions, 0.01);
+				}
+					
+				else if (new_catagory_counter == 1) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "Stdev," << round(stddev, 0.01);
+				}
+					
+				else if (new_catagory_counter == 0) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "Ratio Ave," << round(ratios / _num_regions, 0.01);
+				}
+					
+				--new_catagory_counter;
+
 				file << "\n";
+				file << left_indexer << ",";
 			}
 			else
 			{
@@ -264,17 +313,48 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					if (it->second == j)
 					{
 						file << it->first << ","; //<< " (" << it->second << "),";
+						another_counter++;
 						counter++;
 					}
 				}
 				if (counter == 0)
+				{
 					file << "None,";
+					another_counter++;
+				}
+					
+				if (new_catagory_counter == 2) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "Ave-TBL," << round(TBLs / _num_regions, 0.01);
+				}
+
+				else if (new_catagory_counter == 1) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "Stdev," << round(stddev, 0.01);
+				}
+
+				else if (new_catagory_counter == 0) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "Ratio Ave," << round(ratios / _num_regions, 0.01);
+				}
+				--new_catagory_counter;
 				file << "\n";
+				file << left_indexer << ",";
 			}
 			
 		}
 		
 		counter = 0;
+		int yet_another_counter = 0;
 		file << "General Sector,";
 		for (auto it = general_sector_counter.begin(); it != general_sector_counter.end(); ++it)
 		{
@@ -282,7 +362,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 			if (it->second >= _general_sector_contributors)
 			{
 				file << it->first << "(" << it->second << "),";
-
+				yet_another_counter++;
 				//form is current sector - found notable sector - forward or backward
 				//This is stored so that if the user wants a KCT these values don't have to be
 				//Calculated again.
@@ -291,8 +371,33 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 				else
 					general_collection.push_back(Triad(_sector_names[i].substr(1), it->first, "B"));
 			}
+			
+		}
+		if (new_catagory_counter == 2) {
+			for (int n = 0; n < 8 - yet_another_counter; ++n)
+			{
+				file << ",";
+			}
+			file << "Ave-TBL," << round(TBLs / _num_regions, 0.01);
+		}
+
+		else if (new_catagory_counter == 1) {
+			for (int n = 0; n < 8 - yet_another_counter; ++n)
+			{
+				file << ",";
+			}
+			file << "Stdev," << round(stddev, 0.01);
+		}
+
+		else if (new_catagory_counter == 0) {
+			for (int n = 0; n < 8 - yet_another_counter; ++n)
+			{
+				file << ",";
+			}
+			file << "Ratio Ave," << round(ratios / _num_regions, 0.01);
 		}
 		file << "\n\n";
+		left_indexer++;
 	}
 }
 
