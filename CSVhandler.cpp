@@ -80,24 +80,30 @@ void CSVhandler::build_sectors()
 	std::sort(_sectors.begin(), _sectors.end(), sort);
 }
 
+double round(double in, double precision)
+{
+	return (int)(in / precision) * precision;
+}
+
 //Writes FLT to file.
 void CSVhandler::writeCSV_FLT()
 {
 	int i = 0;
 	int j = 0;
+	set_sector_names_no_regions();
 	//Building filename
 	std::ofstream file;
-	std::string temp = "Forward_Link_Table(";
+	std::string temp = "Linkage_Table(";
 	std::string temp2 = current_file;
 	temp += temp2 + ").csv";
 	file.open(temp.c_str());
-	file << "Table 1: Total Forward Link Table," << "Filename: " << input_file << "\n,";
+	file << "Linkage Table," << "Filename: " << input_file << "\n,";
 	for (i = 1; i < _num_regions+1; i++)
 	{
 		file << db[0][i*_num_sectors];
 		file << ",";
 	}
-	file << "Average," << "Std Dev";
+	file << "Average," << "Std Dev," << "CV";
 	file << "\n";
 	for (i = 0; i < _sectors.size(); i++)
 	{
@@ -112,19 +118,34 @@ void CSVhandler::writeCSV_FLT()
 			for (j = 2; j < _sectors[i].first.length(); ++j)
 				file << _sectors[i].first[j];
 		}
-		
 		file << ",";
+		//unsorted obviously
+		//file << _sector_names_no_region[i] << ",";
+		
+		//Writes the rest of the info up to CV
 		for (j = 0; j < _sectors[i].second.size(); j++)
 		{
-			file << _sectors[i].second[j] << ",";
+			//two decimal places for regions
+			if(i < _num_regions)
+				file << round(_sectors[i].second[j],.1) << ",";
+			else
+				file << round(_sectors[i].second[j], .01) << ",";
 		}
+		if (_sectors[i].first[0] == '\"')
+		{
+			file << CVs[_sectors[i].first.substr(3)];
+		}
+		else
+		{
+			file << CVs[_sectors[i].first.substr(2)];
+		}
+
+		//file << CVs[_sectors[i].first.substr(2)] << ",";
 		file << "\n";
 	}
 }
-double round(double in, double precision)
-{
-	return (int)(in / precision) * precision;
-}
+
+
 void CSVhandler::writeCSV_CC(bool is_forward)
 {
 	//Builds filename
@@ -182,24 +203,24 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 				//Having a - at the start makes Excel treat this is a formula. Breaks program.
 				if (name[0] == '\"')
 				{
-					if (general_sector_counter.find(name.substr(3, name.length() - 4)) != general_sector_counter.end())
+					if (general_sector_counter.find(name.substr(4, name.length() - 5)) != general_sector_counter.end())
 					{
-						general_sector_counter[name.substr(3, name.length() - 4)]++;
+						general_sector_counter[name.substr(4, name.length() - 5)]++;
 					}
 					else
 					{
-						general_sector_counter[name.substr(3, name.length() - 4)] = 1;
+						general_sector_counter[name.substr(4, name.length() - 5)] = 1;
 					}
 				}
 				else
 				{
-					if (general_sector_counter.find(name.substr(1)) != general_sector_counter.end())
+					if (general_sector_counter.find(name.substr(2)) != general_sector_counter.end())
 					{
-						general_sector_counter[name.substr(1)]++;
+						general_sector_counter[name.substr(2)]++;
 					}
 					else
 					{
-						general_sector_counter[name.substr(1)] = 1;
+						general_sector_counter[name.substr(2)] = 1;
 					}
 				}
 				
@@ -251,10 +272,10 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 		
 		//Section 2 Critical Sectors
 		//Data is small enough to allow multiple passes
-		file << "Common Critical Sectors,,,,,,,,,TBL Summary\n";
+		file << "Common Multiregional Critical Sectors,,,,,,,,,TBL Summary\n";
 		file << left_indexer << ",";
 		int indexer = 0;
-		int new_catagory_counter = 2;
+		int new_catagory_counter = 3;
 		for (j = _num_upperbound_reported_contributors; j >= _num_lowerbound_reported_contributors; --j)
 		{
 			counter = 0; // Used as boolean basically
@@ -276,7 +297,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					file << "None,";
 					another_counter++;
 				}
-				if (new_catagory_counter == 2) {
+				if (new_catagory_counter == 3) {
 					for (int n = 0; n < 8 - another_counter; ++n)
 					{
 						file << ",";
@@ -284,7 +305,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					file << "Ave-TBL," << round(TBLs / _num_regions, 0.01);
 				}
 					
-				else if (new_catagory_counter == 1) {
+				else if (new_catagory_counter == 2) {
 					for (int n = 0; n < 8 - another_counter; ++n)
 					{
 						file << ",";
@@ -292,6 +313,15 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					file << "Stdev," << round(stddev, 0.01);
 				}
 					
+				else if (new_catagory_counter == 1) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "CV," << round((TBLs / _num_regions) /stddev, 0.01);
+					CVs[_sector_names_no_region[i]] = (TBLs / _num_regions) / stddev;
+				}
+
 				else if (new_catagory_counter == 0) {
 					for (int n = 0; n < 8 - another_counter; ++n)
 					{
@@ -323,7 +353,7 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					another_counter++;
 				}
 					
-				if (new_catagory_counter == 2) {
+				if (new_catagory_counter == 3) {
 					for (int n = 0; n < 8 - another_counter; ++n)
 					{
 						file << ",";
@@ -331,12 +361,21 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 					file << "Ave-TBL," << round(TBLs / _num_regions, 0.01);
 				}
 
-				else if (new_catagory_counter == 1) {
+				else if (new_catagory_counter == 2) {
 					for (int n = 0; n < 8 - another_counter; ++n)
 					{
 						file << ",";
 					}
 					file << "Stdev," << round(stddev, 0.01);
+				}
+
+				else if (new_catagory_counter == 1) {
+					for (int n = 0; n < 8 - another_counter; ++n)
+					{
+						file << ",";
+					}
+					file << "CV," << round((TBLs / _num_regions) / stddev, 0.01);
+					CVs[_sector_names_no_region[i]] = (TBLs / _num_regions) / stddev;
 				}
 
 				else if (new_catagory_counter == 0) {
@@ -355,7 +394,23 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 		
 		counter = 0;
 		int yet_another_counter = 0;
-		file << "General Sector,";
+		file << "All Common Critical Sectors";
+		if (new_catagory_counter == 2) {
+			file << ",,,,,,,,,Stdev," << round(stddev, 0.01);
+		}
+		else if (new_catagory_counter == 1)
+		{
+			file << ",,,,,,,,,CV," << round((TBLs / _num_regions) / stddev, 0.01);
+			CVs[_sector_names_no_region[i]] = (TBLs / _num_regions) / stddev;
+		}
+		else if (new_catagory_counter == 0) {
+			file << ",,,,,,,,,Ratio Ave," << round(ratios / _num_regions, 0.01);
+		}
+		file << "\n";
+		new_catagory_counter--;
+		file << left_indexer << ",";
+
+
 		for (auto it = general_sector_counter.begin(); it != general_sector_counter.end(); ++it)
 		{
 			//if (it->second >= _num_regions)
@@ -367,30 +422,39 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 				//This is stored so that if the user wants a KCT these values don't have to be
 				//Calculated again.
 				if(is_forward)
-					general_collection.push_back(Triad(_sector_names[i].substr(1), it->first, "F"));
+					general_collection.push_back(Triad(_sector_names[i].substr(2), it->first, "F"));
 				else
-					general_collection.push_back(Triad(_sector_names[i].substr(1), it->first, "B"));
+					general_collection.push_back(Triad(_sector_names[i].substr(2), it->first, "B"));
 			}
 			
 		}
-		if (new_catagory_counter == 2) {
-			for (int n = 0; n < 8 - yet_another_counter; ++n)
+		if (new_catagory_counter == 3) {
+			for (int n = 0; n < 9 - yet_another_counter; ++n)
 			{
 				file << ",";
 			}
 			file << "Ave-TBL," << round(TBLs / _num_regions, 0.01);
 		}
 
-		else if (new_catagory_counter == 1) {
-			for (int n = 0; n < 8 - yet_another_counter; ++n)
+		else if (new_catagory_counter == 2) {
+			for (int n = 0; n < 9 - yet_another_counter; ++n)
 			{
 				file << ",";
 			}
 			file << "Stdev," << round(stddev, 0.01);
 		}
 
+		else if (new_catagory_counter == 1) {
+			for (int n = 0; n < 9 - yet_another_counter; ++n)
+			{
+				file << ",";
+			}
+			file << "CV," << round((TBLs / _num_regions) / stddev, 0.01);
+			CVs[_sector_names_no_region[i]] = (TBLs / _num_regions) / stddev;
+		}
+
 		else if (new_catagory_counter == 0) {
-			for (int n = 0; n < 8 - yet_another_counter; ++n)
+			for (int n = 0; n < 9 - yet_another_counter; ++n)
 			{
 				file << ",";
 			}
@@ -411,6 +475,7 @@ void CSVhandler::clear_data()
 	_sector_names.clear();
 	_all_top_contributors.clear();
 	_sector_names_no_region.clear();
+	//CVs.clear();
 }
 
 void CSVhandler::clear_db()
@@ -418,6 +483,7 @@ void CSVhandler::clear_db()
 	//Clearing the database can't be done every time the rest of the data is cleared
 	//This function is standalone due to how the same db is used between building FLT and KC
 	db.clear();
+	CVs.clear();
 }
 
 //Does everything needed for FLT
@@ -619,11 +685,11 @@ void CSVhandler::set_sector_names_no_regions()
 	{
 		if (_sector_names[i][0] == '\"')
 		{
-			_sector_names_no_region.push_back(_sector_names[i].substr(3, _sector_names[i].length() - 4));
+			_sector_names_no_region.push_back(_sector_names[i].substr(4, _sector_names[i].length() - 5));
 		}
 		else
 		{
-			_sector_names_no_region.push_back(_sector_names[i].substr(1));
+			_sector_names_no_region.push_back(_sector_names[i].substr(2));
 		}
 	}
 }

@@ -61,6 +61,9 @@ public:
 	std::vector<std::vector<std::pair<std::string, double> > > _all_top_contributors;
 	std::vector<Triad> general_collection;
 
+	//Another vector
+	std::unordered_map<std::string, double> CVs;
+
 	char* input_file = "";
 	char* additional_file = "";
 	char* current_file = "";

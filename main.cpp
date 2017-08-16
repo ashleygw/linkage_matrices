@@ -59,18 +59,18 @@ int main(int argc, char* argv[]) {
 		std::cout << "Enter number of sectors per region:" << std::endl;
 		std::cin >> in;
 		man.set_sectors(atoi(in.c_str()));
-		std::cout << "Number of top contributors:" << std::endl;
+		std::cout << "Number of top Critical Contributor Sectors:" << std::endl;
 		std::cin >> in;
 		man.set_num_top_contributors(atoi(in.c_str()));
 
-		std::cout << "Threshold for reporting general sectors:" << std::endl;
+		std::cout << "Threshold for reporting Common multiregional flow sectors:" << std::endl;
 		std::cin >> in;
 		man.set_general_sector_contributors(atoi(in.c_str()));
 
-		std::cout << "Lower bound for reported critical sectors:" << std::endl;
+		std::cout << "Lower bound for Common critical sectors:" << std::endl;
 		std::cin >> in;
 		temp_lower = stoi(in);
-		std::cout << "Upper bound for reported critical sectors:" << std::endl;
+		std::cout << "Upper bound for Common critical sectors:" << std::endl;
 		std::cin >> in;
 		temp_upper = stoi(in);
 		man.set_reported_contributors(temp_lower, temp_upper);
@@ -135,8 +135,9 @@ int main(int argc, char* argv[]) {
 		//This program writes all the files now
 		
 		man.current_file = temp;
-		man.writeFLT(file);
 		man.writeCC(file, !man.forward_flag);
+		man.writeFLT(file);
+		
 		man.clear_db();
 
 		if (man.additional_file != "")
@@ -150,9 +151,9 @@ int main(int argc, char* argv[]) {
 				std::cout << "File not found!";
 				return 1;
 			}
-			man.writeFLT(add_temp_file);
+		
 			man.writeCC(add_temp_file, man.forward_flag);
-			
+			man.writeFLT(add_temp_file);
 			man.writeCSV_CT();
 		}
 			
