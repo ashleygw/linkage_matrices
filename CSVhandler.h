@@ -10,6 +10,9 @@
 #include <unordered_map>
 #include <functional>
 #include <numeric>
+#include <iomanip>
+#include <ios>
+
 typedef std::tuple<std::string, std::string, std::string> Triad;
 
 class CSVhandler {
@@ -61,8 +64,9 @@ public:
 	std::vector<std::vector<std::pair<std::string, double> > > _all_top_contributors;
 	std::vector<Triad> general_collection;
 
-	//Another vector
+	//More maps
 	std::unordered_map<std::string, double> CVs;
+	std::unordered_map<std::string, int> sector_numbers;
 
 	char* input_file = "";
 	char* additional_file = "";

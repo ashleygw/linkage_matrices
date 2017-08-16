@@ -82,7 +82,8 @@ void CSVhandler::build_sectors()
 
 double round(double in, double precision)
 {
-	return (int)(in / precision) * precision;
+	//return (int)(in / precision) * precision;
+	return in;
 }
 
 //Writes FLT to file.
@@ -93,11 +94,16 @@ void CSVhandler::writeCSV_FLT()
 	set_sector_names_no_regions();
 	//Building filename
 	std::ofstream file;
+	file << std::fixed;
+	file.precision(2);
+	file.setf(_IOSfixed);
+	file.setf(_IOSshowpoint);
+	std::cout << std::fixed;
 	std::string temp = "Linkage_Table(";
 	std::string temp2 = current_file;
 	temp += temp2 + ").csv";
 	file.open(temp.c_str());
-	file << "Linkage Table," << "Filename: " << input_file << "\n,";
+	file << "Linkage Table," << "Filename: " << input_file << "\n,,";
 	for (i = 1; i < _num_regions+1; i++)
 	{
 		file << db[0][i*_num_sectors];
@@ -107,6 +113,15 @@ void CSVhandler::writeCSV_FLT()
 	file << "\n";
 	for (i = 0; i < _sectors.size(); i++)
 	{
+		//Write corresponding sector number
+		if (_sectors[i].first[0] == '\"')
+		{
+			file << sector_numbers[_sectors[i].first.substr(3, _sectors[i].first.length() - 4)] << ",";
+		}
+		else
+		{
+			file << sector_numbers[_sectors[i].first.substr(2)] << ",";
+		}
 		//Writes sector names to file
 		if (_sectors[i].first[0] == '\"')
 		{
@@ -119,25 +134,24 @@ void CSVhandler::writeCSV_FLT()
 				file << _sectors[i].first[j];
 		}
 		file << ",";
-		//unsorted obviously
-		//file << _sector_names_no_region[i] << ",";
 		
 		//Writes the rest of the info up to CV
 		for (j = 0; j < _sectors[i].second.size(); j++)
 		{
 			//two decimal places for regions
-			if(i < _num_regions)
-				file << round(_sectors[i].second[j],.1) << ",";
+			if(j < _num_regions)
+				file << std::setprecision(1) << (_sectors[i].second[j]) << ",";
 			else
-				file << round(_sectors[i].second[j], .01) << ",";
+				file << std::setprecision(2) << (_sectors[i].second[j]) << ",";
 		}
 		if (_sectors[i].first[0] == '\"')
 		{
-			file << CVs[_sectors[i].first.substr(3)];
+			file << std::setprecision(2) << (CVs[_sectors[i].first.substr(3, _sectors[i].first.length() - 4)]);
 		}
 		else
 		{
-			file << CVs[_sectors[i].first.substr(2)];
+			//std::cout << std::setprecision(2) << (CVs[_sectors[i].first.substr(2)]) << std::endl;
+			file << std::setprecision(2) << (CVs[_sectors[i].first.substr(2)]);
 		}
 
 		//file << CVs[_sectors[i].first.substr(2)] << ",";
@@ -164,6 +178,10 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 	file << "Input filename: " << current_file << "\n";
 	double counter = 0;
 	double left_indexer = 1;
+	file.precision(2);
+	file.setf(std::ios::fixed);
+	file.setf(std::ios::showpoint);
+	file.precision(2);
 	for (i = 0; i < _num_sectors; i++)
 	{
 		ratios = 0;
@@ -174,6 +192,8 @@ void CSVhandler::writeCSV_CC(bool is_forward)
 		file << left_indexer << ",";
 		file << _sector_names_no_region[i] << " Sector\n";
 		file << left_indexer << ",";
+		file << std::fixed;
+		file << std::setprecision(2);
 		for (j = 0; j < _num_regions; j++)
 		{
 			//Regions in columns. Writes each selected sector.
@@ -681,14 +701,17 @@ void CSVhandler::set_flag(bool boo)
 void CSVhandler::set_sector_names_no_regions()
 {
 	_sector_names_no_region.clear();
+	sector_numbers.clear();
 	for (int i = 0; i < _num_sectors; ++i)
 	{
 		if (_sector_names[i][0] == '\"')
 		{
-			_sector_names_no_region.push_back(_sector_names[i].substr(4, _sector_names[i].length() - 5));
+			sector_numbers[_sector_names[i].substr(3, _sector_names[i].length() - 4)] = i+1;
+			_sector_names_no_region.push_back(_sector_names[i].substr(3, _sector_names[i].length() - 4));
 		}
 		else
 		{
+			sector_numbers[_sector_names[i].substr(2)] = i+1;
 			_sector_names_no_region.push_back(_sector_names[i].substr(2));
 		}
 	}
