@@ -64,7 +64,6 @@ public:
 	std::vector<std::vector<std::pair<std::string, double> > > _all_top_contributors;
 	std::vector<Triad> general_collection;
 
-	//More maps
 	std::unordered_map<std::string, double> CVs;
 	std::unordered_map<std::string, int> sector_numbers;
 
@@ -75,6 +74,8 @@ public:
 	//Is the current loaded database a forward link table
 	bool forward_flag = false;
 };
+
+//Used in building FLT
 class sorter {
 public:
 	bool operator()(std::vector<double>& a, std::vector<double>& b);

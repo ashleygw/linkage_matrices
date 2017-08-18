@@ -3,7 +3,7 @@
 #include <string>
 #include "CSVhandler.h"
 
-//This has been compiled in Visual Studio. C++11
+// C++11 dependent
 int main(int argc, char* argv[]) {
 	CSVhandler man;
 
@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 		temp_upper = stoi(in);
 		man.set_reported_contributors(temp_lower, temp_upper);
 
-		//While loops protect againt unintentional misshits ruining patience
+		//While loops protect againt unintentional hits ruining patience
 		while (1)
 		{
 			std::cout << "Generate common critical contributors table? (y/n) " << std::endl;
@@ -132,17 +132,14 @@ int main(int argc, char* argv[]) {
 		}
 		std::cout << "Files building..." << std::endl;
 		
-		//This program writes all the files now
-		
+		//Write first file
 		man.current_file = temp;
 		man.writeCC(file, !man.forward_flag);
 		man.writeFLT(file);
-		
 		man.clear_db();
 
 		if (man.additional_file != "")
 		{
-			//TODO use a different read in method
 			char *temp3 = &add_file_in[0u];
 			man.current_file = temp3;
 			
@@ -151,7 +148,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "File not found!";
 				return 1;
 			}
-		
+			//Write second file
 			man.writeCC(add_temp_file, man.forward_flag);
 			man.writeFLT(add_temp_file);
 			man.writeCSV_CT();
