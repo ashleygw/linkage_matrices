@@ -1,5 +1,7 @@
 # Linkage Map and Total Link Table Generator for EC Production Structures
 
+# This is a great example of unmaintainable code. Please disregard how bad it is. I use it as a funny example of bad code sometimes.
+
 This program takes a Forward Linkage map and generates a total forward link table and Critical Contributors table as demonstrated here:
 http://onlinelibrary.wiley.com/doi/10.1111/0022-4146.00053/abstract
 It creates two new .csv files with the specified tables.
